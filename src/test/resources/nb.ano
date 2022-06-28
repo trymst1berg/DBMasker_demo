@@ -1,0 +1,46 @@
+table KundeData
+	column text Fornavn
+	column text Etternavn
+	column date Fodselsdag
+	column text Fodelsnummer
+	column text Kontonummer
+	column text Telefonnummer
+
+transformation no.bank.transformations.Person_NO
+
+task Anonymisering
+{
+    // Anonymize - Mask various fields
+    update KundeData
+        // Create random name from list of firstnames and lastnames
+        mask Fornavn
+            format "%s"
+            file src/main/resources/firstname.txt random-order
+        mask Etternavn
+            format "%s"
+            file src/main/resources/lastname.txt random-order
+        // Create random norwegian phone number
+		randomize Fodselsdag
+			type date
+			format %tF
+			convert String2Date
+			offset 300.0
+			flat-noise 5.0
+			percentage-noise 0.0
+        // Create random norwegian phone number
+        mask Fodelsnummer
+            format "%1$td%1$tm%1$ty%2$s"
+            transform Person_NO
+            column Fodselsdag convert String2Date
+            random-integer 10000 99999
+        // Create random norwegian phone number
+        mask Kontonummer
+            format "%d.%d.%d"
+            random-integer 1000 9990
+            random-integer 10 99
+            random-integer 10001 99909
+        // Create random norwegian phone number
+        mask Telefonnummer
+            format "%d"
+            random-integer 10001000 99909990
+}
